@@ -111,10 +111,10 @@ function nearestNeighbors(dictionary, article) { //computes nearest neighbor bas
       middle += 1;
     }
   }
-  var average = (left + 0.5*middle)/5;
-  if (average < 0.37) {
+  var average = (left - right)/5;
+  if (average < -0.2) {
     return "conservative";
-  } else if (average > 0.63) {
+  } else if (average > 0.2) {
     return "liberal";
   } else {
     return "center";
