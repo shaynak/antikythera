@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+
+  "name": "Antikythera: Removing Bias",
+  "description": "This extension allows the user to see the bias of the webpage they are visiting using a classification algorithm with word frequencies.",
+  "version": "1.0",
+
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html",
+    "default_title": "Click here!"
+  },
+  "permissions": [
+    "activeTab",
+    "storage"
+  ]
+}
