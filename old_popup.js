@@ -20,44 +20,46 @@ function collectDataFromURL(filename, classifier) {
   return [text, classifier];
 }
 
-function buildDictSelective(websites) {
-  var data = collectDataFromURL("words");
-  var str = data[0];
-  var words = str.replace(/\W/g, " ").replace("  ", " ").split(" ");
-  var dictionary = [];
-  var classifiers = [["classifier"]];
+function buildDicts(websites) { //creates a dictionary for every website
+  var dictionary = [["classifier"]]; //adds a "classifier" thing to the column that holds classifiers
 
-  for (i = 0; i < words.length; i++) { //creates a dictionary with each specific word
-    var notin = true;
-    for (d = 0; d < dictionary.length; d++) {
-      if (words[i] == dictionary[d][0]) {
-        notin = false;
-      }
-    }
-    if (notin) {
-      dictionary.push([words[i]]);
-    }
-  }
-  for (s = 0; s < websites.length; s++) { //collects text and classifier of each site
-    site = websites[s];
+  for (let site of websites) { //collects text and classifier of each site
+    console.log(dictionary);
     var inbetween = collectDataFromURL(site[0], site[1]);
     var words = inbetween[0];
     var classify = inbetween[1];
 
-    classifiers[0].push(classify); //adds classifier to list
-    var dict = checkNumsSelective(words, dictionary); //creates dictionary for the specific website we're looking at
-    for (i = 0; i < dictionary.length; i++) {
-      dictionary[i].push(dict[i][1]);
+    dictionary[0].push(classify); //adds classifier to list
+    var dict = checkNums(words, dictionary.slice(1)); //creates dictionary for the specific website we're looking at
+
+    //next: adds the words in dict as a new line in dictionary
+    for (j = 0; j < dict.length; j++) { //for each word in dictionary
+      var indict = false; //assumes not in dictionary
+      for (d = 1; d < dictionary.length; d++) { //for word in dictionary
+        if (dict[j][0] == dictionary[d][0]) { //if words are same
+          dictionary[d].push(dict[j][1]); //add word to end of dictionary list
+          indict = true;
+        }
+      }
+
+      if (!indict) { //if a word present isn't present in the dictionary
+        var added = [dict[j][0]]
+        for (p = 1; p < dictionary[1].length - 1; p++) { //goes to everything but the last value
+          added.push(0);
+        }
+        added.push(dict[j][1]);
+        dictionary.push(added); //adds the current value
+      }
     }
   }
-  return classifiers.concat(dictionary);
+  return dictionary;
 }
 
-function checkNumsSelective(str, dic) {
-  var dict = [];
-  if (dic) { //this block creates an array that contains an array for each word containing two values: word and word frequency
-    for (i = 0; i < dic.length; i++) {
-      dict[i] = [dic[i][0], 0];
+function checkNums(str, dict) { //adds value from a string to a dictionary
+  if (dict) { //this block creates an array that contains an array for each word containing two values: word and word frequency
+    for (i = 0; i < dict.length; i++) {
+      dict[i] = dict[i].slice(0, 2);
+      dict[i][1] = 0;
     }
   }
 
@@ -66,38 +68,49 @@ function checkNumsSelective(str, dic) {
   var words = str.split(" ");
 
   for (i = 0; i < words.length; i++) {
-    if (dict) { //makes sure dict exists/no error
-      for (d = 0; d < dict.length; d++) { //goes through every word in the dictionary for matching
-        if (words[i] == dict[d][0]) { //if words[i] --> checks for a match
-          dict[d][1] += 1; //adds a frequency to the dictionary
+    if (words[i] != "") { //makes sure no values in teh dictionary are ""
+      var isin = false; //assumes word isn't in the dictionary
+      if (dict) { //makes sure dict exists/no error
+        for (d = 0; d < dict.length; d++) { //goes through every word in the dictionary for matching
+          if (words[i] == dict[d][0]) { //if words[i] --> checks for a match
+            dict[d][1] += 1; //adds a frequency to the dictionary
+            isin = true; //sets isin
+          }
         }
-      }  
+        if (!isin) { //if the word isn't in the dictionary...
+          dict.push([words[i], 1]); //adds it to the dictionary
+        }
+      }
     }
   }
   return dict; //returns the created single value dictionary
 }
 
 function nearestNeighbors(dictionary, article) { //computes nearest neighbor based on matching words
-  var art = checkNumsSelective(article, dictionary);
+  var art = checkNums(article, dictionary);
+  console.log(art);
+  console.log(dictionary);
   var arrs = [[], []];
   var dists = [[], []];
-  for (comp = 1; comp < dictionary[1].length; comp++) { // goes down list
-    for (i = 0; i < art.length; i++) { //for the article--goes down each word
-      for (j = 1; j < dictionary.length; j++) { //goes down each word in dictionary 
-        if (dictionary[j][0] == art[i][0]) { //if two words are equal...
-          if (dictionary[j][comp] != art[i][1]) { //if
+  var lolz = [];
+  for (comp = 1; comp < dictionary[1].length; comp++) {
+    for (i = 0; i < art.length; i++) {
+      for (j = 1; j < dictionary.length; j++) {
+        if (dictionary[j][0] == art[i][0]) {
+          if (dictionary[j][comp] > 0 && art[i][1] > 0) {
+            lolz.push(dictionary[j][0]);
+          }
+          if (dictionary[j][comp] != art[i][1]) {
             arrs[0].push(dictionary[j][comp]);
             arrs[1].push(art[i][1]);
           }
         }
       }
     }
+    console.log(lolz);
     dists[0].push(dictionary[0][comp]);
     dists[1].push(distance(arrs[0], arrs[1]))
-    arrs = [[], []];
   }
-
-
   console.log(dists);
   var sorted = quickSort(dists);
   console.log(sorted);
@@ -191,12 +204,13 @@ document.addEventListener('DOMContentLoaded', () => {
   var button = document.getElementById("clicker");
 
   var txt = chrome.extension.getBackgroundPage().txt;
-    console.log(txt);
+  console.log(txt);
 
   button.addEventListener("click", () => {
+    console.log(txt);
     document.getElementById("class").innerText = "Loading!";
-    var diction = buildDictSelective([["cons_bloom_tax", "conservative"], ["cons_mediaite_franken", "conservative"], ["cons_natrev_tax", "conservative"], ["cons_weeklystand_franken", "conservative"], ["lib_nymag_tax", "liberal"], ["lib_vox_franken", "liberal"], ["lib_wpost_franken", "liberal"], ["lib_slate_tax", "liberal"], ["center_convo_tax", "center"], ["center_usatod_tax", "center"]]);
-    var classification = nearestNeighbors(diction, txt);
+    var dictionary = buildDicts([["cons_bloom_tax", "conservative"], ["cons_mediaite_franken", "conservative"], ["cons_natrev_tax", "conservative"], ["cons_weeklystand_franken", "conservative"], ["lib_nymag_tax", "liberal"], ["lib_vox_franken", "liberal"], ["lib_wpost_franken", "liberal"], ["lib_slate_tax", "liberal"], ["center_convo_tax", "center"], ["center_usatod_tax", "center"]]);
+    var classification = nearestNeighbors(dictionary, txt);
     document.getElementById("class").innerText = classification;
   });
 });
