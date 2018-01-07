@@ -159,14 +159,16 @@ function getSum(array) {
 
 function quickSort(arr) { //sorts the arrays for a classification
   if (arr[1]) {
-    if (arr[1].length == 1 || arr[1].length == 0) {
+    if (arr[1].length == 1 || arr[1].length == 0) { //checks to make sure you don't have a single element
       return arr;
-    } else if (arr[1].length == 2) {
-      if (arr[1][0] > arr[1][1]) {
-        return [[arr[0][1], arr[0], [0]], [arr[1][1], arr[1][0]]];
+
+    } else if (arr[1].length == 2) { //if there are only two values left...
+      if (arr[1][0] > arr[1][1]) { //if the values need to be switched...
+        return [[arr[0][1], arr[0][0]], [arr[1][1], arr[1][0]]];
       }
       return arr;
     }
+
     var index = (arr[1].length/2).toFixed(0);
     var pivot = arr[1][index];
     var left = [[], []];
@@ -186,6 +188,19 @@ function quickSort(arr) { //sorts the arrays for a classification
   }
 }
 
+function getWebsites(files) { //allows me to update text files with file names in shaynak.github.io
+  var websites = [];
+  for (i = 0; i < files.length; i++) {
+    var data = collectDataFromURL(files[i][0], files[i][1]);
+    var classifier = data[1];
+    var names = data[0];
+    names = names.split(" ");
+    for (name = 0; name < names.length; name++) {
+      websites.push([names[name], classifier]);
+    }
+  }
+  return websites;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   var button = document.getElementById("clicker");
@@ -195,7 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   button.addEventListener("click", () => {
     document.getElementById("class").innerText = "Loading!";
-    var diction = buildDictSelective([["cons_bloom_tax", "conservative"], ["cons_mediaite_franken", "conservative"], ["cons_natrev_tax", "conservative"], ["cons_weeklystand_franken", "conservative"], ["lib_nymag_tax", "liberal"], ["lib_vox_franken", "liberal"], ["lib_wpost_franken", "liberal"], ["lib_slate_tax", "liberal"], ["center_convo_tax", "center"], ["center_usatod_tax", "center"]]);
+    var websites = getWebsites([["cons_files", "conservative"], ["lib_files", "liberal"], ["center_files", "center"]]);
+    var diction = buildDictSelective(websites);
     var classification = nearestNeighbors(diction, txt);
     document.getElementById("class").innerText = classification;
   });

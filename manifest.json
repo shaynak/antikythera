@@ -3,7 +3,7 @@
 
   "name": "Antikythera: Removing Bias (beta)",
   "description": "Extension allows the user to see the bias of the webpage they are visiting using word frequencies.",
-  "version": "1.0",
+  "version": "1.01",
 
   "browser_action": {
     "default_icon": "icon.png",
